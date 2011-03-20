@@ -1,0 +1,14 @@
+################################################################################
+# This script will create universal binaries for OpenCV library for
+# iOS-based devices (iPhone, iPad, iPod, etc).
+# As output you obtain debug/release static libraries and include headers.
+# 
+# This script was written by Eugene Khvedchenya
+# And distributed under GPL license
+# Support site: http://computer-vision-talks.com
+################################################################################
+
+Changelog:
+
+Version 1.0 - Initial commit
++ Supported OpenCV up to 4771 revision, XCode 3 and iOS SDK 4.2.1
