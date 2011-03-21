@@ -27,9 +27,12 @@ D=`dirname "$2"`
 B=`basename "$2"`
 BUILD="`cd \"$D\" 2>/dev/null && pwd || echo \"$D\"`/$B"
 
-INTERMEDIATE=$BUILD/tmp
-PATCHED_SRC_DIR=$BUILD/src-tmp
-INSTALL_DIR=$INTERMEDIATE/install
+INTERMEDIATE=$BUILD/tmp 
+IOS_INSTALL_DIR=$INTERMEDIATE/ios-install
+MAC_INSTALL_DIR=$INTERMEDIATE/mac-install
+PATCHED_SRC_DIR=$INTERMEDIATE/ios-sources-patched
+IOS_BUILD_DIR=$INTERMEDIATE/ios-build
+MAC_BUILD_DIR=$INTERMEDIATE/mac-build
 
 echo "OpenCV source   :" $SRC
 echo "Build directory :" $BUILD
@@ -38,15 +41,34 @@ echo "Patched source  :" $PATCHED_SRC_DIR
 
 OPENCV_MODULES_TO_BUILD=(zlib libjpeg libpng libtiff libjasper opencv_lapack opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_imgproc opencv_legacy opencv_contrib opencv_ml opencv_objdetect opencv_video)
 
-echo "Will build following modules:"
-for target in ${OPENCV_MODULES_TO_BUILD[*]}
-do
-echo $target
-done
-
 ################################################################################
 # Clear the old build and recompile the new one.
 rm -rf $BUILD
+
+################################################################################
+# Now we build OpenCV with macosx sdk.
+# This will build opencv INSTALL target, which will 
+# copy headers to the $BUILD/include directory.
+echo "Installing OpenCV headers"
+mkdir -p $MAC_BUILD_DIR
+cd $MAC_BUILD_DIR
+cmake -DCMAKE_INSTALL_PREFIX=$MAC_INSTALL_DIR \
+-DENABLE_SSE=NO \
+-DENABLE_SSE2=NO \
+-DBUILD_TESTS=OFF \
+-DBUILD_EXAMPLES=NO \
+-DBUILD_NEW_PYTHON_SUPPORT=NO \
+-DWITH_EIGEN2=NO \
+-DWITH_PVAPI=NO \
+-DWITH_OPENEXR=NO \
+-DWITH_QT=NO \
+-DWITH_QUICKTIME=NO \
+-DOPENCV_BUILD_3RDPARTY_LIBS=YES \
+-G Xcode $SRC > /dev/null
+
+mkdir $BUILD/include
+xcodebuild -sdk macosx -configuration Release -parallelizeTargets -target install > /dev/null
+mv $MAC_INSTALL_DIR/include/* $BUILD/include
 
 ################################################################################
 # We have to patch OpenCV source to exclude several modules form build
@@ -61,14 +83,15 @@ mv $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt.patched                       
 
 ################################################################################
 # Configure OpenCV
-mkdir -p $INTERMEDIATE
-cd $INTERMEDIATE
+mkdir -p $IOS_BUILD_DIR
+cd $IOS_BUILD_DIR
 
-cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
+cmake -DCMAKE_INSTALL_PREFIX=$IOS_INSTALL_DIR \
 -DENABLE_SSE=NO \
 -DENABLE_SSE2=NO \
 -DBUILD_TESTS=OFF \
 -DBUILD_SHARED_LIBS=NO \
+-DBUILD_NEW_PYTHON_SUPPORT=NO \
 -DBUILD_EXAMPLES=NO \
 -DWITH_EIGEN2=NO \
 -DWITH_PVAPI=NO \
@@ -76,47 +99,57 @@ cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
 -DWITH_QT=NO \
 -DWITH_QUICKTIME=NO \
 -DOPENCV_BUILD_3RDPARTY_LIBS=YES \
--G Xcode $PATCHED_SRC_DIR/opencv
+-G Xcode $PATCHED_SRC_DIR/opencv > /dev/null
 
 ################################################################################
-# Let's b everything:
-cd $INTERMEDIATE
-
-################################################################################
-echo "Building iphone configuration"
+# Build everything:
+echo "Building iphone release configuration"
 for target in ${OPENCV_MODULES_TO_BUILD[*]}
 do
 echo "\tbuilding " $target
-xcodebuild -sdk iphoneos -configuration Release ARCHS="armv7" -target $target > /dev/null
-xcodebuild -sdk iphoneos -configuration Debug   ARCHS="armv7" -target $target > /dev/null
+xcodebuild -sdk iphoneos -configuration Release -parallelizeTargets ARCHS="armv7" -target $target > /dev/null
 done
 
 mkdir -p $BUILD/lib/release-iphoneos
-mv $INTERMEDIATE/lib/Release/*.a          $BUILD/lib/release-iphoneos
-mv $INTERMEDIATE/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos
+mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphoneos > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos > /dev/null
 
-mkdir -p $BUILD/lib/debug-iphoneos
-mv $INTERMEDIATE/lib/Debug/*.a            $BUILD/lib/debug-iphoneos
-mv $INTERMEDIATE/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos
-
-################################################################################
-echo "Building iphone simulator configuration"
+echo "Building iphone debug configuration"
 for target in ${OPENCV_MODULES_TO_BUILD[*]}
 do
-xcodebuild -sdk iphonesimulator -configuration Release ARCHS="i386" -target $target > /dev/null
-xcodebuild -sdk iphonesimulator -configuration Debug   ARCHS="i386" -target $target > /dev/null
+echo "\tbuilding " $target
+xcodebuild -sdk iphoneos -configuration Debug -parallelizeTargets   ARCHS="armv7" -target $target > /dev/null
 done
 
-mkdir -p $BUILD/lib/Release-iphonesimulator
-mv $INTERMEDIATE/lib/Release/*.a          $BUILD/lib/release-iphonesimulator
-mv $INTERMEDIATE/3rdparty/lib/Release/*.a $BUILD/lib/release-iphonesimulator
-
-mkdir -p $BUILD/lib/debug-iphonesimulator
-mv $INTERMEDIATE/lib/Debug/*.a          $BUILD/lib/debug-iphonesimulator
-mv $INTERMEDIATE/3rdparty/lib/Debug/*.a $BUILD/lib/debug-iphonesimulator
+mkdir -p $BUILD/lib/debug-iphoneos
+mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos > /dev/null
 
 ################################################################################
-# Make universal binaries for release INTERMEDIATE:
+echo "Building iphone simulator release configuration"
+for target in ${OPENCV_MODULES_TO_BUILD[*]}
+do
+echo "\tbuilding " $target
+xcodebuild -sdk iphonesimulator -configuration Release -parallelizeTargets ARCHS="i386" -target $target > /dev/null
+done
+
+mkdir -p $BUILD/lib/release-iphonesimulator
+mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphonesimulator > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphonesimulator > /dev/null
+
+echo "Building iphone simulator debug configuration"
+for target in ${OPENCV_MODULES_TO_BUILD[*]}
+do
+echo "\tbuilding " $target
+xcodebuild -sdk iphonesimulator -configuration Debug -parallelizeTargets   ARCHS="i386" -target $target > /dev/null
+done
+
+mkdir -p $BUILD/lib/debug-iphonesimulator
+mv $IOS_BUILD_DIR/lib/Debug/*.a          $BUILD/lib/debug-iphonesimulator > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a $BUILD/lib/debug-iphonesimulator > /dev/null
+
+################################################################################
+# Make universal binaries for release configuration:
 mkdir -p $BUILD/lib/release-universal
 
 for FILE in `ls $BUILD/lib/release-iphoneos`
@@ -127,7 +160,7 @@ do
 done
 
 ################################################################################
-# Make universal binaries for debug INTERMEDIATE:
+# Make universal binaries for debug configuration:
 mkdir -p $BUILD/lib/debug-universal
 
 for FILE in `ls $BUILD/lib/debug-iphoneos`
@@ -137,30 +170,6 @@ do
     -create -output $BUILD/lib/debug-universal/$FILE
 done
 
-################################################################################
-# Now we build OpenCV with macosx sdk.
-# This will build opencv INSTALL target, which will 
-# copy headers to the $BUILD/include directory.
-echo "Getting OpenCV headers"
 
-cd $INTERMEDIATE
-cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR \
--DENABLE_SSE=NO \
--DENABLE_SSE2=NO \
--DBUILD_TESTS=OFF \
--DBUILD_SHARED_LIBS=NO \
--DBUILD_EXAMPLES=NO \
--DWITH_EIGEN2=NO \
--DWITH_PVAPI=NO \
--DWITH_OPENEXR=NO \
--DWITH_QT=NO \
--DWITH_QUICKTIME=NO \
--DOPENCV_BUILD_3RDPARTY_LIBS=YES \
--G Xcode $SRC
-
-mkdir $BUILD/include
-xcodebuild -sdk macosx -configuration Release -target install > /dev/null
-mv $INSTALL_DIR/include/* $BUILD/include
-
-#rm -rf $INTERMEDIATE
+rm -rf $INTERMEDIATE
 echo "All is done"
