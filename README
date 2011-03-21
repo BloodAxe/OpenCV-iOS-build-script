@@ -10,5 +10,8 @@
 
 Changelog:
 
+Version 1.1 - Added support for XCode 4
++ Fixed problem when building for XCode 4 - resolved by patching copy of OpenCV sources
+
 Version 1.0 - Initial commit
 + Supported OpenCV up to 4771 revision, XCode 3 and iOS SDK 4.2.1
