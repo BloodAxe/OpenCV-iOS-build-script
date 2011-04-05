@@ -102,28 +102,52 @@ cmake -DCMAKE_INSTALL_PREFIX=$IOS_INSTALL_DIR \
 -G Xcode $PATCHED_SRC_DIR/opencv > /dev/null
 
 ################################################################################
-# Build everything:
-echo "Building iphone release configuration"
+# Build for device armv6 architecture :
+echo "Building iphone release armv6 configuration"
+for target in ${OPENCV_MODULES_TO_BUILD[*]}
+do
+echo "\tbuilding " $target
+xcodebuild -sdk iphoneos -configuration Release -parallelizeTargets ARCHS="armv6" -target $target > /dev/null
+done
+
+mkdir -p $BUILD/lib/release-iphoneos-armv6
+mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphoneos-armv6 > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos-armv6 > /dev/null
+
+echo "Building iphone debug armv6 configuration"
+for target in ${OPENCV_MODULES_TO_BUILD[*]}
+do
+echo "\tbuilding " $target
+xcodebuild -sdk iphoneos -configuration Debug -parallelizeTargets   ARCHS="armv6" -target $target > /dev/null
+done
+
+mkdir -p $BUILD/lib/debug-iphoneos-armv6
+mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos-armv6 > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos-armv6 > /dev/null
+
+################################################################################
+# Build for device armv7 architecture :
+echo "Building iphone release armv7 configuration"
 for target in ${OPENCV_MODULES_TO_BUILD[*]}
 do
 echo "\tbuilding " $target
 xcodebuild -sdk iphoneos -configuration Release -parallelizeTargets ARCHS="armv7" -target $target > /dev/null
 done
 
-mkdir -p $BUILD/lib/release-iphoneos
-mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphoneos > /dev/null
-mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos > /dev/null
+mkdir -p $BUILD/lib/release-iphoneos-armv7
+mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphoneos-armv7 > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos-armv7 > /dev/null
 
-echo "Building iphone debug configuration"
+echo "Building iphone debug armv7 configuration"
 for target in ${OPENCV_MODULES_TO_BUILD[*]}
 do
 echo "\tbuilding " $target
 xcodebuild -sdk iphoneos -configuration Debug -parallelizeTargets   ARCHS="armv7" -target $target > /dev/null
 done
 
-mkdir -p $BUILD/lib/debug-iphoneos
-mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos > /dev/null
-mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos > /dev/null
+mkdir -p $BUILD/lib/debug-iphoneos-armv7
+mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos-armv7 > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos-armv7 > /dev/null
 
 ################################################################################
 echo "Building iphone simulator release configuration"
@@ -154,9 +178,10 @@ mkdir -p $BUILD/lib/release-universal
 
 for FILE in `ls $BUILD/lib/release-iphoneos`
 do
-  lipo $BUILD/lib/release-iphoneos/$FILE \
-    -arch i386 $BUILD/lib/release-iphonesimulator/$FILE \
-    -create -output $BUILD/lib/release-universal/$FILE
+  lipo $BUILD/lib/release-iphoneos-armv7/$FILE \
+       $BUILD/lib/release-iphoneos-armv6/$FILE \
+       $BUILD/lib/release-iphonesimulator/$FILE \
+       -create -output $BUILD/lib/release-universal/$FILE
 done
 
 ################################################################################
@@ -165,11 +190,13 @@ mkdir -p $BUILD/lib/debug-universal
 
 for FILE in `ls $BUILD/lib/debug-iphoneos`
 do
-  lipo $BUILD/lib/debug-iphoneos/$FILE \
-    -arch i386 $BUILD/lib/debug-iphonesimulator/$FILE \
-    -create -output $BUILD/lib/debug-universal/$FILE
+  lipo $BUILD/lib/debug-iphoneos-armv7/$FILE \
+       $BUILD/lib/debug-iphoneos-armv6/$FILE \
+       $BUILD/lib/debug-iphonesimulator/$FILE \
+       -create -output $BUILD/lib/debug-universal/$FILE
 done
 
-
+################################################################################
+# Final cleanup
 rm -rf $INTERMEDIATE
 echo "All is done"
