@@ -176,7 +176,7 @@ mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a $BUILD/lib/debug-iphonesimulator > /dev
 # Make universal binaries for release configuration:
 mkdir -p $BUILD/lib/release-universal
 
-for FILE in `ls $BUILD/lib/release-iphoneos`
+for FILE in `ls $BUILD/lib/release-iphoneos-armv7`
 do
   lipo $BUILD/lib/release-iphoneos-armv7/$FILE \
        $BUILD/lib/release-iphoneos-armv6/$FILE \
@@ -188,7 +188,7 @@ done
 # Make universal binaries for debug configuration:
 mkdir -p $BUILD/lib/debug-universal
 
-for FILE in `ls $BUILD/lib/debug-iphoneos`
+for FILE in `ls $BUILD/lib/debug-iphoneos-armv7`
 do
   lipo $BUILD/lib/debug-iphoneos-armv7/$FILE \
        $BUILD/lib/debug-iphoneos-armv6/$FILE \
