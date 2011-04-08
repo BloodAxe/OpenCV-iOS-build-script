@@ -10,6 +10,12 @@
 
 Changelog:
 
+Version 1.3
++ Fixed bug with creation of universal binaries if opencv source path was not ends with 'opencv'
+
+Version 1.2
++ Added Armv6 architecture support
+
 Version 1.1 - Added support for XCode 4
 + Fixed problem when building for XCode 4 - resolved by patching copy of OpenCV sources
 

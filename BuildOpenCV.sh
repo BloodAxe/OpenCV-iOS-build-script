@@ -75,11 +75,11 @@ mv $MAC_INSTALL_DIR/include/* $BUILD/include
 # because they prevent building other libs.
 echo "Patching OpenCV sources"
 mkdir -p $PATCHED_SRC_DIR
-cp -R $SRC $PATCHED_SRC_DIR
-sed '/add_subdirectory(ts)/d' $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt      > $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt.patched
-mv $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt.patched                           $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt
-sed '/add_subdirectory(highgui)/d' $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt > $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt.patched
-mv $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt.patched                           $PATCHED_SRC_DIR/opencv/modules/CMakeLists.txt
+cp -R $SRC/ $PATCHED_SRC_DIR
+sed '/add_subdirectory(ts)/d' $PATCHED_SRC_DIR/modules/CMakeLists.txt      > $PATCHED_SRC_DIR/modules/CMakeLists.txt.patched
+mv $PATCHED_SRC_DIR/modules/CMakeLists.txt.patched                           $PATCHED_SRC_DIR/modules/CMakeLists.txt
+sed '/add_subdirectory(highgui)/d' $PATCHED_SRC_DIR/modules/CMakeLists.txt > $PATCHED_SRC_DIR/modules/CMakeLists.txt.patched
+mv $PATCHED_SRC_DIR/modules/CMakeLists.txt.patched                           $PATCHED_SRC_DIR/modules/CMakeLists.txt
 
 ################################################################################
 # Configure OpenCV
@@ -99,7 +99,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$IOS_INSTALL_DIR \
 -DWITH_QT=NO \
 -DWITH_QUICKTIME=NO \
 -DOPENCV_BUILD_3RDPARTY_LIBS=YES \
--G Xcode $PATCHED_SRC_DIR/opencv > /dev/null
+-G Xcode $PATCHED_SRC_DIR > /dev/null
 
 ################################################################################
 # Build for device armv6 architecture :
