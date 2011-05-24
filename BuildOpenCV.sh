@@ -39,7 +39,7 @@ echo "Build directory :" $BUILD
 echo "Intermediate dir:" $INTERMEDIATE
 echo "Patched source  :" $PATCHED_SRC_DIR
 
-OPENCV_MODULES_TO_BUILD=(zlib libjpeg libpng libtiff libjasper opencv_lapack opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_imgproc opencv_legacy opencv_contrib opencv_ml opencv_objdetect opencv_video)
+OPENCV_MODULES_TO_BUILD=(zlib libjpeg libpng libtiff libjasper opencv_calib3d opencv_core opencv_features2d opencv_flann opencv_imgproc opencv_legacy opencv_contrib opencv_ml opencv_objdetect opencv_video)
 
 ################################################################################
 # Clear the old build and recompile the new one.
