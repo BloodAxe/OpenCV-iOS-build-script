@@ -82,7 +82,7 @@ sed '/add_subdirectory(highgui)/d' $PATCHED_SRC_DIR/modules/CMakeLists.txt > $PA
 mv $PATCHED_SRC_DIR/modules/CMakeLists.txt.patched                           $PATCHED_SRC_DIR/modules/CMakeLists.txt
 
 ################################################################################
-# Configure OpenCV
+# Configure OpenCV for iOS SDK
 mkdir -p $IOS_BUILD_DIR
 cd $IOS_BUILD_DIR
 
@@ -93,6 +93,12 @@ cmake -DCMAKE_INSTALL_PREFIX=$IOS_INSTALL_DIR \
 -DBUILD_SHARED_LIBS=NO \
 -DBUILD_NEW_PYTHON_SUPPORT=NO \
 -DBUILD_EXAMPLES=NO \
+-DUSE_O3=YES \
+-DCMAKE_C_FLAGS_DEBUG:STRING="-fvisibility=hidden -mno-thumb" \
+-DCMAKE_CXX_FLAGS_DEBUG:STRING="-fvisibility=hidden -mno-thumb" \
+-DCMAKE_C_FLAGS_RELEASE:STRING="-fvisibility=hidden -mno-thumb" \
+-DCMAKE_CXX_FLAGS_RELEASE:STRING="-fvisibility=hidden -mno-thumb" \
+-DUSE_PRECOMPILED_HEADERS=NO \
 -DWITH_EIGEN2=NO \
 -DWITH_PVAPI=NO \
 -DWITH_OPENEXR=NO \
@@ -126,30 +132,6 @@ mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos-armv6 > /de
 mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos-armv6 > /dev/null
 
 ################################################################################
-# Build for device armv7 architecture :
-echo "Building iphone release armv7 configuration"
-for target in ${OPENCV_MODULES_TO_BUILD[*]}
-do
-echo "\tbuilding " $target
-xcodebuild -sdk iphoneos -configuration Release -parallelizeTargets ARCHS="armv7" -target $target > /dev/null
-done
-
-mkdir -p $BUILD/lib/release-iphoneos-armv7
-mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphoneos-armv7 > /dev/null
-mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos-armv7 > /dev/null
-
-echo "Building iphone debug armv7 configuration"
-for target in ${OPENCV_MODULES_TO_BUILD[*]}
-do
-echo "\tbuilding " $target
-xcodebuild -sdk iphoneos -configuration Debug -parallelizeTargets   ARCHS="armv7" -target $target > /dev/null
-done
-
-mkdir -p $BUILD/lib/debug-iphoneos-armv7
-mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos-armv7 > /dev/null
-mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos-armv7 > /dev/null
-
-################################################################################
 echo "Building iphone simulator release configuration"
 for target in ${OPENCV_MODULES_TO_BUILD[*]}
 do
@@ -171,6 +153,57 @@ done
 mkdir -p $BUILD/lib/debug-iphonesimulator
 mv $IOS_BUILD_DIR/lib/Debug/*.a          $BUILD/lib/debug-iphonesimulator > /dev/null
 mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a $BUILD/lib/debug-iphonesimulator > /dev/null
+
+################################################################################
+# Build for device armv7 debug architecture :
+echo "Building iphone debug armv7 configuration"
+for target in ${OPENCV_MODULES_TO_BUILD[*]}
+do
+echo "\tbuilding " $target
+xcodebuild -sdk iphoneos -configuration Debug -parallelizeTargets   ARCHS="armv7" -target $target > /dev/null
+done
+
+mkdir -p $BUILD/lib/debug-iphoneos-armv7
+mv $IOS_BUILD_DIR/lib/Debug/*.a            $BUILD/lib/debug-iphoneos-armv7 > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Debug/*.a   $BUILD/lib/debug-iphoneos-armv7 > /dev/null
+
+################################################################################
+# Build for device armv7 release architecture :
+# Armv7 Release will be built with optimized flags.
+# Therefore we have to reconfigure project:
+
+# Theoreticaly, with these flags OpenCV should runs faster in release mode. But i did tests and didn't get any signs of improvements.
+#-DCMAKE_C_FLAGS_RELEASE:STRING="-fvisibility=hidden -mthumb -mfpu=neon -funsafe-math-optimizations -mvectorize-with-neon-quad -mtune=cortex-a8 -fsee -funroll-loops -ftree-vectorize -mfloat-abi=softfp -fstrict-aliasing -fgcse-las -funsafe-loop-optimizations" \
+#-DCMAKE_CXX_FLAGS_RELEASE:STRING="-fvisibility=hidden -mthumb -mfpu=neon -funsafe-math-optimizations -mvectorize-with-neon-quad -mtune=cortex-a8 -fsee -funroll-loops -ftree-vectorize -mfloat-abi=softfp -fstrict-aliasing -fgcse-las -funsafe-loop-optimizations" \
+
+cmake -DCMAKE_INSTALL_PREFIX=$IOS_INSTALL_DIR \
+-DENABLE_SSE=NO \
+-DENABLE_SSE2=NO \
+-DBUILD_TESTS=OFF \
+-DBUILD_SHARED_LIBS=NO \
+-DBUILD_NEW_PYTHON_SUPPORT=NO \
+-DBUILD_EXAMPLES=NO \
+-DCMAKE_C_FLAGS_RELEASE:STRING="-fvisibility=hidden -O3" \
+-DCMAKE_CXX_FLAGS_RELEASE:STRING="-fvisibility=hidden -O3" \
+-DUSE_PRECOMPILED_HEADERS=NO \
+-DWITH_EIGEN2=NO \
+-DWITH_PVAPI=NO \
+-DWITH_OPENEXR=NO \
+-DWITH_QT=NO \
+-DWITH_QUICKTIME=NO \
+-DOPENCV_BUILD_3RDPARTY_LIBS=YES \
+-G Xcode $PATCHED_SRC_DIR > /dev/null
+
+echo "Building iphone release armv7 configuration"
+for target in ${OPENCV_MODULES_TO_BUILD[*]}
+do
+echo "\tbuilding " $target
+xcodebuild -sdk iphoneos -configuration Release -parallelizeTargets ARCHS="armv7" -target $target > /dev/null
+done
+
+mkdir -p $BUILD/lib/release-iphoneos-armv7
+mv $IOS_BUILD_DIR/lib/Release/*.a          $BUILD/lib/release-iphoneos-armv7 > /dev/null
+mv $IOS_BUILD_DIR/3rdparty/lib/Release/*.a $BUILD/lib/release-iphoneos-armv7 > /dev/null
 
 ################################################################################
 # Make universal binaries for release configuration:
@@ -196,7 +229,8 @@ do
        -create -output $BUILD/lib/debug-universal/$FILE
 done
 
+
 ################################################################################
 # Final cleanup
-rm -rf $INTERMEDIATE
+#rm -rf $INTERMEDIATE
 echo "All is done"
