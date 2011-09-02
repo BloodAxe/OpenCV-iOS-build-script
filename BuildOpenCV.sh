@@ -43,6 +43,10 @@ OPENCV_MODULES_TO_BUILD=(zlib libjpeg libpng libtiff libjasper opencv_calib3d op
 
 ################################################################################
 # Clear the old build and recompile the new one.
+echo "WARNING: The bulid directory will be removed and re-created again."
+echo "WARNING: Is your last chance to check is it correct and you do not have anything valuable in it."
+read -p "Press any key to continue..."
+
 rm -rf $BUILD
 
 ################################################################################
