@@ -10,6 +10,10 @@
 
 Changelog:
 
+Version 1.5
++ Added Xcode 4.2.x and iOS 5 SDK support
++ Native experimental OpenCV build system is used
+
 Version 1.4
 + Updated build script to support OpenCV 2.2.9
 
