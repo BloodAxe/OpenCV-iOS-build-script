@@ -47,6 +47,7 @@ mkdir -p $IOS_DEV_BUILD_DIR
 pushd $IOS_DEV_BUILD_DIR
 cmake -GXcode -DCMAKE_TOOLCHAIN_FILE=$SRC/ios/cmake/Toolchains/Toolchain-iPhoneOS_Xcode.cmake \
 -DCMAKE_INSTALL_PREFIX=$INTERMEDIATE/install \
+-DOPENCV_BUILD_3RDPARTY_LIBS=YES \
 -DBUILD_EXAMPLES=NO \
 -DBUILD_TESTS=NO \
 -DBUILD_NEW_PYTHON_SUPPORT=NO \
@@ -64,6 +65,7 @@ mkdir -p $IOS_SIM_BUILD_DIR
 pushd $IOS_SIM_BUILD_DIR
 cmake -GXcode -DCMAKE_TOOLCHAIN_FILE=$SRC/ios/cmake/Toolchains/Toolchain-iPhoneSimulator_Xcode.cmake \
 -DCMAKE_INSTALL_PREFIX=$INTERMEDIATE/install \
+-DOPENCV_BUILD_3RDPARTY_LIBS=YES \
 -DBUILD_EXAMPLES=NO \
 -DBUILD_TESTS=NO \
 -DBUILD_NEW_PYTHON_SUPPORT=NO \
@@ -72,6 +74,14 @@ cmake -GXcode -DCMAKE_TOOLCHAIN_FILE=$SRC/ios/cmake/Toolchains/Toolchain-iPhoneS
 xcodebuild -sdk iphonesimulator -configuration Release -target ALL_BUILD
 xcodebuild -sdk iphonesimulator -configuration Debug -target ALL_BUILD
 popd
+
+################################################################################
+# Copy third party libs to opencv libs lib dir:
+cp -f $IOS_DEV_BUILD_DIR/3rdparty/lib/Debug/*.a   $IOS_DEV_BUILD_DIR/lib/Debug/
+cp -f $IOS_DEV_BUILD_DIR/3rdparty/lib/Release/*.a $IOS_DEV_BUILD_DIR/lib/Release/
+
+cp -f $IOS_SIM_BUILD_DIR/3rdparty/lib/Debug/*.a   $IOS_SIM_BUILD_DIR/lib/Debug/
+cp -f $IOS_SIM_BUILD_DIR/3rdparty/lib/Release/*.a $IOS_SIM_BUILD_DIR/lib/Release/
 
 ################################################################################
 # Make universal binaries for release configuration:
@@ -97,6 +107,7 @@ done
 
 ################################################################################
 # Copy headers:
+rm -rf $BUILD/include
 mv $INTERMEDIATE/install/include $BUILD/include
 
 ################################################################################
