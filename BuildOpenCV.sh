@@ -52,6 +52,9 @@ cmake -GXcode -DCMAKE_TOOLCHAIN_FILE=$SRC/ios/cmake/Toolchains/Toolchain-iPhoneO
 -DBUILD_TESTS=NO \
 -DBUILD_NEW_PYTHON_SUPPORT=NO \
 -DBUILD_PERF_TESTS=NO \
+-DBUILD_PERF_TESTS=NO \
+-DCMAKE_C_FLAGS_RELEASE="-O3 -ffast-math" \
+-DCMAKE_CXX_FLAGS_RELEASE="-O3 -ffast-math" \
 -DCMAKE_XCODE_ATTRIBUTE_GCC_VERSION="com.apple.compilers.llvmgcc42" $SRC
 
 xcodebuild -sdk iphoneos -configuration Release -target ALL_BUILD
